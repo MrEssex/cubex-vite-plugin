@@ -1,0 +1,22 @@
+{
+  "name": "mressex/cubex-vite-plugin",
+  "description": "Cubex Plugin for Vite",
+  "version": "0.0.1",
+  "type": "library",
+  "require": {
+    "php": ">=8.2.0",
+    "packaged/dispatch": "^2.21.0"
+  },
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "MrEssex\\CubexVite\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "MrEssex"
+    }
+  ],
+  "minimum-stability": "dev"
+}

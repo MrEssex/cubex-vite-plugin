@@ -1,0 +1,367 @@
+{
+    "_readme": [
+        "This file locks the dependencies of your project to a known state",
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
+        "This file is @generated automatically"
+    ],
+    "content-hash": "df3a6d0924fd97590e5ae0a5cf9127ba",
+    "packages": [
+        {
+            "name": "packaged/config",
+            "version": "1.10.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/packaged/config.git",
+                "reference": "40cb35dc4904b6d13213083f972efa5b3c1299c9"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/packaged/config/zipball/40cb35dc4904b6d13213083f972efa5b3c1299c9",
+                "reference": "40cb35dc4904b6d13213083f972efa5b3c1299c9",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8"
+            },
+            "suggest": {
+                "ext-apcu": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Packaged\\Config\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brooke Bryan",
+                    "email": "brooke@bajb.net"
+                }
+            ],
+            "description": "Configuration Layer",
+            "support": {
+                "issues": "https://github.com/packaged/config/issues",
+                "source": "https://github.com/packaged/config/tree/1.10.1"
+            },
+            "time": "2022-09-14T19:51:28+00:00"
+        },
+        {
+            "name": "packaged/dispatch",
+            "version": "2.21.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/packaged/dispatch.git",
+                "reference": "d4b391396f4d8f5620710a34972450c6b072cff2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/packaged/dispatch/zipball/d4b391396f4d8f5620710a34972450c6b072cff2",
+                "reference": "d4b391396f4d8f5620710a34972450c6b072cff2",
+                "shasum": ""
+            },
+            "require": {
+                "packaged/config": "~1.4",
+                "packaged/helpers": "^1.0||^2.0",
+                "packaged/http": "~1.1|^2.0.0",
+                "tedivm/jshrink": "~1.3"
+            },
+            "require-dev": {
+                "ext-apcu": "*",
+                "phpunit/phpunit": "10"
+            },
+            "suggest": {
+                "ext-apcu": "*"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Packaged\\Dispatch\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brooke Bryan",
+                    "email": "brooke@bajb.net"
+                }
+            ],
+            "description": "Asset Management Middleware for Stack PHP",
+            "support": {
+                "issues": "https://github.com/packaged/dispatch/issues",
+                "source": "https://github.com/packaged/dispatch/tree/2.21.0"
+            },
+            "time": "2024-12-17T15:35:52+00:00"
+        },
+        {
+            "name": "packaged/helpers",
+            "version": "2.16.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/packaged/helpers.git",
+                "reference": "d11d735a66da73455239c70ccddece5e52bb9d7b"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/packaged/helpers/zipball/d11d735a66da73455239c70ccddece5e52bb9d7b",
+                "reference": "d11d735a66da73455239c70ccddece5e52bb9d7b",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Packaged\\Tests\\": "tests",
+                    "Packaged\\Helpers\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brooke Bryan",
+                    "email": "brooke@bajb.net"
+                }
+            ],
+            "description": "Generic PHP Helper Classes",
+            "support": {
+                "issues": "https://github.com/packaged/helpers/issues",
+                "source": "https://github.com/packaged/helpers/tree/2.16.1"
+            },
+            "time": "2024-03-21T13:39:48+00:00"
+        },
+        {
+            "name": "packaged/http",
+            "version": "2.0.x-dev",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/packaged/http.git",
+                "reference": "c76c2298ec6999bd1f3010f9af865a09f5e37791"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/packaged/http/zipball/c76c2298ec6999bd1f3010f9af865a09f5e37791",
+                "reference": "c76c2298ec6999bd1f3010f9af865a09f5e37791",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "packaged/config": "^1.2",
+                "packaged/helpers": "^1.9||^2.0",
+                "packaged/map": "*",
+                "php": ">=7.1",
+                "psr/http-message": "^1.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^8.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Packaged\\Http\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brooke Bryan",
+                    "email": "brooke@bajb.net"
+                }
+            ],
+            "description": "Generic HTTP Transport",
+            "support": {
+                "issues": "https://github.com/packaged/http/issues",
+                "source": "https://github.com/packaged/http/tree/2.0"
+            },
+            "time": "2021-06-29T11:30:08+00:00"
+        },
+        {
+            "name": "packaged/map",
+            "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/packaged/map.git",
+                "reference": "be948ce8dbcb1a09f18be851feccd8e46a63c5bb"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/packaged/map/zipball/be948ce8dbcb1a09f18be851feccd8e46a63c5bb",
+                "reference": "be948ce8dbcb1a09f18be851feccd8e46a63c5bb",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.3"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.3.8"
+            },
+            "default-branch": true,
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Packaged\\Map\\": "src"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Brooke Bryan",
+                    "email": "brooke@bajb.net"
+                }
+            ],
+            "description": "Generic Map Helper",
+            "support": {
+                "issues": "https://github.com/packaged/map/issues",
+                "source": "https://github.com/packaged/map/tree/0.4.0"
+            },
+            "time": "2021-03-25T22:19:40+00:00"
+        },
+        {
+            "name": "psr/http-message",
+            "version": "1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/php-fig/http-message.git",
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/php-fig/http-message/zipball/cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "reference": "cb6ce4845ce34a8ad9e68117c10ee90a29919eba",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.2 || ^8.0"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Psr\\Http\\Message\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "PHP-FIG",
+                    "homepage": "http://www.php-fig.org/"
+                }
+            ],
+            "description": "Common interface for HTTP messages",
+            "homepage": "https://github.com/php-fig/http-message",
+            "keywords": [
+                "http",
+                "http-message",
+                "psr",
+                "psr-7",
+                "request",
+                "response"
+            ],
+            "support": {
+                "source": "https://github.com/php-fig/http-message/tree/1.1"
+            },
+            "time": "2023-04-04T09:50:52+00:00"
+        },
+        {
+            "name": "tedivm/jshrink",
+            "version": "v1.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/tedious/JShrink.git",
+                "reference": "7a35f5a4651ca2ce77295eb8a3b4e133ba47e19e"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/tedious/JShrink/zipball/7a35f5a4651ca2ce77295eb8a3b4e133ba47e19e",
+                "reference": "7a35f5a4651ca2ce77295eb8a3b4e133ba47e19e",
+                "shasum": ""
+            },
+            "require": {
+                "php": "^7.0|^8.0"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.14",
+                "php-coveralls/php-coveralls": "^2.5.0",
+                "phpunit/phpunit": "^9|^10"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "JShrink": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "BSD-3-Clause"
+            ],
+            "authors": [
+                {
+                    "name": "Robert Hafner",
+                    "email": "tedivm@tedivm.com"
+                }
+            ],
+            "description": "Javascript Minifier built in PHP",
+            "homepage": "http://github.com/tedious/JShrink",
+            "keywords": [
+                "javascript",
+                "minifier"
+            ],
+            "support": {
+                "issues": "https://github.com/tedious/JShrink/issues",
+                "source": "https://github.com/tedious/JShrink/tree/v1.7.0"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/tedivm",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/tedivm/jshrink",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2023-10-04T17:23:23+00:00"
+        }
+    ],
+    "packages-dev": [],
+    "aliases": [],
+    "minimum-stability": "dev",
+    "stability-flags": {},
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": {
+        "php": ">=8.2.0"
+    },
+    "platform-dev": {},
+    "plugin-api-version": "2.6.0"
+}
