@@ -14,6 +14,50 @@ which in turn is based on the [Laravel Vite Plugin](https://github.com/laravel/v
 
 ## Installation
 
-1. Install the plugin using composer:
+Install with composer:
 
-```bash
+```shell
+composer require mressex/cubex-vite-plugin
+```
+
+Create a `vite.config.js` file in the root of your project:
+
+```
+// vite.config.js
+import { defineConfig } from 'vite';
+import cubex from "cubex-vite-plugin";
+
+export default defineConfig({
+    plugins: [
+        cubex([
+            'assets/scss/index.scss',
+            'assets/ts/index.ts',
+        ]),
+    ],
+});
+```
+
+## Getting Started
+
+- Install your node dependencies: `npm install`
+- Start vite server: `npm run dev`
+
+### Add to the Cubex DI, also requires Dispatch to be setup
+
+```php
+$cubex->share(Vite::class, $cubex->resolve(Vite::class, $ctx->getProjectRoot()));
+```
+
+### Loading Your Scripts and Styles
+
+Register and css or ts files in the `vite.config.js` file. The plugin will automatically load the files in the
+development environment and use the production build in the production environment.
+
+pass true if you want to include the Vite client for Hot Mode Reloading
+
+```php
+protected function _registerResources(Vite $vite): void
+  {
+    $vite(['assets/scss/index.scss', 'assets/ts/index.ts'], true);
+  }
+```

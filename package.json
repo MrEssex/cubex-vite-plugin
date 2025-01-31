@@ -24,6 +24,7 @@
   "scripts": {
     "build": "run-s clean build:*",
     "clean": "rimraf dist",
+    "build:types": "tsc --emitDeclarationOnly",
     "build:esm": "esbuild src/index.ts --platform=node --format=esm --outfile=dist/index.js ",
     "build:copy": "cp src/dev-server-index.html dist/",
     "lint": "eslint --ext .ts ./src ./tests",
