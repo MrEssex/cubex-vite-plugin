@@ -1,11 +1,10 @@
 import { ConfigEnv, Plugin, UserConfig } from 'vite';
 import { Config as FullReloadConfig } from 'vite-plugin-full-reload';
-import { InputOption } from "rollup";
 interface PluginConfig {
     /**
      * The Path of paths of the entry points to compile
      */
-    input: InputOption;
+    input: string | string[];
     /**
      * Cubex Public Directory
      * @default 'public'
@@ -21,6 +20,16 @@ interface PluginConfig {
      * @default '.dev'
      */
     hotFile?: string;
+    /**
+     * The path of the SSR entry point
+     */
+    ssr?: string | string[];
+    /**
+     * The directory to output the SSR files to
+     *
+     * @default 'bootstrap/ssr'
+     */
+    ssrOutputDirectory?: string;
     /**
      * Configuration for performing full page reloads on file changes
      * {@link https://github.com/ElMassimo/vite-plugin-full-reload}

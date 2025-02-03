@@ -4,14 +4,13 @@ import path from 'path'
 import colors from 'picocolors'
 import { ConfigEnv, loadEnv, Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
-import { InputOption } from "rollup"
 import { fileURLToPath } from "url";
 
 interface PluginConfig {
   /**
    * The Path of paths of the entry points to compile
    */
-  input: InputOption
+  input: string | string[]
 
   /**
    * Cubex Public Directory
@@ -30,6 +29,18 @@ interface PluginConfig {
    * @default '.dev'
    */
   hotFile?: string
+
+  /**
+   * The path of the SSR entry point
+   */
+  ssr?: string | string[]
+
+  /**
+   * The directory to output the SSR files to
+   *
+   * @default 'bootstrap/ssr'
+   */
+  ssrOutputDirectory?: string
 
   /**
    * Configuration for performing full page reloads on file changes
@@ -90,6 +101,7 @@ function resolveCubexPlugin(pluginConfig: Required<PluginConfig>): CubexPlugin {
       userConfig = config;
       const env = loadEnv(mode, userConfig.envDir || process.cwd(), '');
       const assetUrl = env.ASSET_URL ?? '';
+      const ssr = !!userConfig.build?.ssr;
 
       // ensureCommandShouldRunInEnvironment(command, serverConfig);
 
@@ -97,10 +109,10 @@ function resolveCubexPlugin(pluginConfig: Required<PluginConfig>): CubexPlugin {
         base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
         publicDir: userConfig.publicDir ?? false,
         build: {
-          manifest: userConfig.build?.manifest ?? 'manifest.json',
-          outDir: userConfig.build?.outDir ?? pluginConfig.buildDirectory,
+          manifest: userConfig.build?.manifest ?? !ssr,
+          outDir: userConfig.build?.outDir ?? ssr ? pluginConfig.ssrOutputDirectory : pluginConfig.buildDirectory,
           rollupOptions: {
-            input: userConfig.build?.rollupOptions?.input ?? pluginConfig.input,
+            input: userConfig.build?.rollupOptions?.input ?? ssr ? pluginConfig.ssr : pluginConfig.input,
           },
           assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0,
         },
@@ -187,7 +199,7 @@ function resolvePluginConfig(config: string | string[] | PluginConfig): Required
   }
 
   if (typeof config === 'string' || Array.isArray(config)) {
-    config = { input: config }
+    config = { input: config, ssr: config }
   }
 
   if (typeof config.input === 'undefined') {
@@ -210,14 +222,21 @@ function resolvePluginConfig(config: string | string[] | PluginConfig): Required
     }
   }
 
+  if (config.ssrOutputDirectory === "string") {
+    config.ssrOutputDirectory = config.ssrOutputDirectory.trim().replace(/^\/+/, '').replace(/\/+$/, '')
+  }
+
   if (config.refresh === true) {
     config.refresh = [{ paths: refreshPaths }];
   }
+
 
   return {
     input: config.input,
     publicDirectory: config.publicDirectory ?? 'public',
     buildDirectory: config.buildDirectory ?? 'resources',
+    ssr: config.ssr ?? config.input,
+    ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
     hotFile: config.hotFile ?? '.dev',
     refresh: config.refresh ?? true // default to true
   }

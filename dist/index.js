@@ -30,14 +30,15 @@ function resolveCubexPlugin(pluginConfig) {
       userConfig = config;
       const env = loadEnv(mode, userConfig.envDir || process.cwd(), "");
       const assetUrl = env.ASSET_URL ?? "";
+      const ssr = !!userConfig.build?.ssr;
       return {
         base: userConfig.base ?? (command === "build" ? resolveBase(pluginConfig, assetUrl) : ""),
         publicDir: userConfig.publicDir ?? false,
         build: {
-          manifest: userConfig.build?.manifest ?? "manifest.json",
-          outDir: userConfig.build?.outDir ?? pluginConfig.buildDirectory,
+          manifest: userConfig.build?.manifest ?? !ssr,
+          outDir: userConfig.build?.outDir ?? ssr ? pluginConfig.ssrOutputDirectory : pluginConfig.buildDirectory,
           rollupOptions: {
-            input: userConfig.build?.rollupOptions?.input ?? pluginConfig.input
+            input: userConfig.build?.rollupOptions?.input ?? ssr ? pluginConfig.ssr : pluginConfig.input
           },
           assetsInlineLimit: userConfig.build?.assetsInlineLimit ?? 0
         },
@@ -110,7 +111,7 @@ function resolvePluginConfig(config) {
     throw new Error("cubex-vite-plugin: missing configuration");
   }
   if (typeof config === "string" || Array.isArray(config)) {
-    config = { input: config };
+    config = { input: config, ssr: config };
   }
   if (typeof config.input === "undefined") {
     throw new Error('cubex-vite-plugin: missing configuration for "input"');
@@ -127,6 +128,9 @@ function resolvePluginConfig(config) {
       throw new Error(`cubex-vite-plugin: "buildDirectory" must be a subdirectory of the project root. E.g 'resources'`);
     }
   }
+  if (config.ssrOutputDirectory === "string") {
+    config.ssrOutputDirectory = config.ssrOutputDirectory.trim().replace(/^\/+/, "").replace(/\/+$/, "");
+  }
   if (config.refresh === true) {
     config.refresh = [{ paths: refreshPaths }];
   }
@@ -134,6 +138,8 @@ function resolvePluginConfig(config) {
     input: config.input,
     publicDirectory: config.publicDirectory ?? "public",
     buildDirectory: config.buildDirectory ?? "resources",
+    ssr: config.ssr ?? config.input,
+    ssrOutputDirectory: config.ssrOutputDirectory ?? "bootstrap/ssr",
     hotFile: config.hotFile ?? ".dev",
     refresh: config.refresh ?? true
   };
