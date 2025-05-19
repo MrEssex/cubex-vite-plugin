@@ -318,10 +318,15 @@ function getAppUrl(resolvedConfig: ResolvedConfig, pluginConfig: Required<Plugin
 
   if (fs.existsSync(defaultsIni)) {
     const defaults = fs.readFileSync(defaultsIni).toString();
+    const schema = defaults.match(/schema\s*=\s*(.+)/)?.[1] ?? 'http';
     const host = defaults.match(/host\s*=\s*(.+)/)?.[1];
     const port = defaults.match(/port\s*=\s*(.+)/)?.[1];
 
-    return `http://${host}:${port}`;
+    if (!port) {
+      return `${schema}://${host}`;
+    }
+
+    return `${schema}://${host}:${port}`;
   }
 
   const envDir = resolvedConfig.envDir ?? process.cwd();
