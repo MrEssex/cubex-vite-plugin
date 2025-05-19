@@ -67,7 +67,7 @@ class Vite
   protected function _getManifest(): array
   {
     $resourceDirectory = $this->_projectRoot . DIRECTORY_SEPARATOR . $this->_buildDirectory;
-    $manifestFile = $resourceDirectory . DIRECTORY_SEPARATOR . 'manifest.json';
+    $manifestFile = $resourceDirectory . DIRECTORY_SEPARATOR . '.vite' . DIRECTORY_SEPARATOR . 'manifest.json';
     if(file_exists($manifestFile))
     {
       return json_decode(file_get_contents($manifestFile), true, 512, JSON_THROW_ON_ERROR);
