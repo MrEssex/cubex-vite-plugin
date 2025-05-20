@@ -33,7 +33,7 @@ class Vite
     return file_exists($this->hotFile());
   }
 
-  public function __invoke($entryPoints, $includeClient): void
+  public function __invoke($entryPoints, $includeClient = false): void
   {
     if(!is_array($entryPoints))
     {
@@ -57,6 +57,17 @@ class Vite
       {
         $loc = $manifest[$entryPoint]['file'];
         $this->_loadResource($loc);
+      }
+      else
+      {
+        foreach(array_keys($manifest) as $key)
+        {
+          if(str_starts_with($key, $entryPoint))
+          {
+            $loc = $manifest[$key]['file'];
+            $this->_loadResource($loc);
+          }
+        }
       }
     }
   }
