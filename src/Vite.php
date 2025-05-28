@@ -2,18 +2,16 @@
 
 namespace MrEssex\CubexVite;
 
-use JsonException;
 use Packaged\Dispatch\Dispatch;
 use Packaged\Dispatch\ResourceManager;
 
 class Vite
 {
-  protected string $_hotFile;
-  protected string $_buildDirectory = 'resources';
-
   public function __construct(
     protected Dispatch $_dispatch,
-    protected string   $_projectRoot,
+    protected string   $_projectRoot = "",
+    protected string   $_buildDirectory = 'resources',
+    protected string   $_hotFile = "",
   )
   {
   }
@@ -38,12 +36,40 @@ class Vite
     return file_exists($this->hotFile());
   }
 
-  public function external($asset): void
+  public function external($entryPoints, $prefix = ""): void
   {
-    $this->_loadExternalResource($asset);
+    if(!is_array($entryPoints))
+    {
+      $entryPoints = [$entryPoints];
+    }
+
+    foreach($entryPoints as $entryPoint)
+    {
+      $this->_loadExternalResource($prefix . $entryPoint);
+    }
   }
 
-  public function __invoke($entryPoints, $includeClient = false, $prefix = ""): void
+  public function getResourceUri($entryPoints): array
+  {
+    if(!is_array($entryPoints))
+    {
+      $entryPoints = [$entryPoints];
+    }
+
+    $uris = [];
+    foreach($entryPoints as $entryPoint)
+    {
+      $loc = $this->_resolveResource($entryPoint);
+      foreach($loc as $file)
+      {
+        $uris[] = $this->getResourceManager()->getResourceUri($file);
+      }
+    }
+
+    return $uris;
+  }
+
+  public function __invoke($entryPoints, $includeClient = false): void
   {
     if(!is_array($entryPoints))
     {
@@ -56,35 +82,25 @@ class Vite
       $entryPoints[] = '@vite/client';
     }
 
-    $manifest = $this->_getManifest();
     foreach($entryPoints as $entryPoint)
     {
-      if($isHot)
+      $loc = $this->_resolveResource($entryPoint);
+      if($loc)
       {
-        $this->_loadResource($this->_hotUrl($entryPoint));
-      }
-      else if(isset($manifest[$entryPoint]))
-      {
-        $loc = $manifest[$entryPoint]['file'];
-        $this->_loadResource($prefix . $loc);
-      }
-      else
-      {
-        foreach(array_keys($manifest) as $key)
+        if(is_array($loc))
         {
-          if(str_starts_with($key, $entryPoint))
-          {
-            $loc = $manifest[$key]['file'];
-            $this->_loadResource($prefix . $loc);
-          }
+          array_walk($loc, function ($asset) {
+            $this->_loadResource($asset);
+          });
+        }
+        else
+        {
+          $this->_loadResource($loc);
         }
       }
     }
   }
 
-  /**
-   * @throws JsonException
-   */
   protected function _getManifest(): array
   {
     $resourceDirectory = $this->_projectRoot . DIRECTORY_SEPARATOR . $this->_buildDirectory;
@@ -125,5 +141,31 @@ class Vite
     {
       $this->getExternalResourceManager()->requireCss($asset);
     }
+  }
+
+  protected function _resolveResource(string $entryPoint): string|array
+  {
+    $isHot = $this->isRunningHot();
+    $manifest = $this->_getManifest();
+    if($isHot)
+    {
+      return $this->_hotUrl($entryPoint);
+    }
+
+    if(isset($manifest[$entryPoint]))
+    {
+      return $manifest[$entryPoint]['file'];
+    }
+
+    $loc = [];
+    foreach(array_keys($manifest) as $key)
+    {
+      if(str_starts_with($key, $entryPoint))
+      {
+        $loc[] = $manifest[$key]['file'];
+      }
+    }
+
+    return $loc;
   }
 }
