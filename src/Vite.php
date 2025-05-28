@@ -23,6 +23,11 @@ class Vite
     return ResourceManager::resources([], $this->_dispatch);
   }
 
+  public function getExternalResourceManager(): ResourceManager
+  {
+    return ResourceManager::external([], $this->_dispatch);
+  }
+
   public function hotFile(): string
   {
     return $this->_hotFile ?? rtrim($this->_projectRoot, '/') . DIRECTORY_SEPARATOR . '.dev';
@@ -33,7 +38,12 @@ class Vite
     return file_exists($this->hotFile());
   }
 
-  public function __invoke($entryPoints, $includeClient = false): void
+  public function external($asset): void
+  {
+    $this->_loadExternalResource($asset);
+  }
+
+  public function __invoke($entryPoints, $includeClient = false, $prefix = ""): void
   {
     if(!is_array($entryPoints))
     {
@@ -56,7 +66,7 @@ class Vite
       else if(isset($manifest[$entryPoint]))
       {
         $loc = $manifest[$entryPoint]['file'];
-        $this->_loadResource($loc);
+        $this->_loadResource($prefix . $loc);
       }
       else
       {
@@ -65,7 +75,7 @@ class Vite
           if(str_starts_with($key, $entryPoint))
           {
             $loc = $manifest[$key]['file'];
-            $this->_loadResource($loc);
+            $this->_loadResource($prefix . $loc);
           }
         }
       }
@@ -101,6 +111,19 @@ class Vite
     if(str_ends_with($asset, ".css") || str_ends_with($asset, ".scss") || str_ends_with($asset, ".sass"))
     {
       $this->getResourceManager()->requireCss($asset);
+    }
+  }
+
+  protected function _loadExternalResource(string $asset): void
+  {
+    if(str_ends_with($asset, ".ts") || str_ends_with($asset, ".js"))
+    {
+      $this->getExternalResourceManager()->requireJs($asset, ['type' => 'module']);
+    }
+
+    if(str_ends_with($asset, ".css") || str_ends_with($asset, ".scss") || str_ends_with($asset, ".sass"))
+    {
+      $this->getExternalResourceManager()->requireCss($asset);
     }
   }
 }

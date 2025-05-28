@@ -1,7 +1,7 @@
 {
   "name": "mressex/cubex-vite-plugin",
   "description": "Cubex Plugin for Vite",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "type": "library",
   "require": {
     "php": ">=8.2.0",
