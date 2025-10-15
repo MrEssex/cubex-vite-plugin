@@ -28,7 +28,7 @@ class Vite
 
   public function hotFile(): string
   {
-    return $this->_hotFile ?? rtrim($this->_projectRoot, '/') . DIRECTORY_SEPARATOR . '.dev';
+    return $this->_hotFile ?: rtrim($this->_projectRoot, '/') . DIRECTORY_SEPARATOR . '.dev';
   }
 
   public function isRunningHot(): bool
@@ -101,10 +101,28 @@ class Vite
     }
   }
 
+  public function reactRefresh(): void
+  {
+    if(!$this->isRunningHot())
+    {
+      return;
+    }
+
+    $react = $this->hotAsset('@react-refresh');
+    ResourceManager::inline([], $this->_dispatch)->requireJs(
+      'import RefreshRuntime from "' . $react . '"
+                    RefreshRuntime.injectIntoGlobalHook(window)
+                    window.$RefreshReg$ = () => {}
+                    window.$RefreshSig$ = () => (type) => type
+                    window.__vite_plugin_react_preamble_installed__ = true',
+      ['type' => 'module']
+    );
+  }
+
   protected function _getManifest(): array
   {
     $resourceDirectory = $this->_projectRoot . DIRECTORY_SEPARATOR . $this->_buildDirectory;
-    $manifestFile = $resourceDirectory . DIRECTORY_SEPARATOR . '.vite' . DIRECTORY_SEPARATOR . 'manifest.json';
+    $manifestFile = $resourceDirectory . DIRECTORY_SEPARATOR . 'manifest.json';
     if(file_exists($manifestFile))
     {
       return json_decode(file_get_contents($manifestFile), true, 512, JSON_THROW_ON_ERROR);
@@ -117,9 +135,18 @@ class Vite
     return rtrim(file_get_contents($this->hotFile())) . '/' . ltrim($asset, '/');
   }
 
+  protected function hotAsset($asset)
+  {
+    $file = file_get_contents($this->hotFile());
+    return rtrim($file) . '/' . $asset;
+  }
+
   protected function _loadResource(string $asset): void
   {
-    if(str_ends_with($asset, "@vite/client") || str_ends_with($asset, ".ts") || str_ends_with($asset, ".js"))
+    if(str_ends_with($asset, "@vite/client") || str_ends_with($asset, ".ts") || str_ends_with(
+        $asset,
+        ".tsx"
+      ) || str_ends_with($asset, ".js"))
     {
       $this->getResourceManager()->requireJs($asset, ['type' => 'module']);
     }
@@ -168,4 +195,5 @@ class Vite
 
     return $loc;
   }
+
 }

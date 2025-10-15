@@ -1,10 +1,11 @@
-import fs from 'fs'
+import fs, { mkdirSync } from 'fs'
 import { AddressInfo } from 'net'
 import path from 'path'
 import colors from 'picocolors'
 import { ConfigEnv, loadEnv, Plugin, PluginOption, ResolvedConfig, UserConfig } from 'vite'
 import fullReload, { Config as FullReloadConfig } from 'vite-plugin-full-reload'
 import { fileURLToPath } from "url";
+import { existsSync } from "node:fs";
 
 interface PluginConfig {
   /**
@@ -14,6 +15,7 @@ interface PluginConfig {
 
   /**
    * Cubex Public Directory
+   *
    * @default 'public'
    */
   publicDirectory?: string
@@ -38,7 +40,7 @@ interface PluginConfig {
   /**
    * The directory to output the SSR files to
    *
-   * @default 'bootstrap/ssr'
+   * @default 'resources/ssr'
    */
   ssrOutputDirectory?: string
 
@@ -48,6 +50,11 @@ interface PluginConfig {
    * @default false
    */
   refresh?: boolean | string | string[] | RefreshConfig | RefreshConfig[]
+
+  /**
+   * Transform the code while serving.
+   */
+  transformOnServe?: (code: string, url: DevServerUrl) => string,
 }
 
 interface RefreshConfig {
@@ -66,14 +73,20 @@ let exitHandlersBound = false;
 export const refreshPaths = [
   'src/**/*',
   'assets/**/*',
+  'translations/**/*',
 ].filter(path => fs.existsSync(path.replace(/\*\*$/, '')));
 
 /**
  * Cubex Plugin for Vite.
+ *
  * @param config - A config object or relative path(s) of the scripts to be compiled.
  */
 export default function cubex(config: string | string[] | PluginConfig): [CubexPlugin, ...Plugin[]] {
   const pluginConfig = resolvePluginConfig(config);
+
+  if (!existsSync(pluginConfig.buildDirectory)) {
+    mkdirSync(pluginConfig.buildDirectory, { recursive: true });
+  }
 
   return [
     resolveCubexPlugin(pluginConfig),
@@ -91,25 +104,26 @@ function resolveCubexPlugin(pluginConfig: Required<PluginConfig>): CubexPlugin {
   let userConfig: UserConfig;
 
   const defaultAliases: Record<string, string> = {
-    '@': 'assets/ts',
+    '@': 'assets/js',
   }
 
   return {
     name: 'cubex',
     enforce: 'post',
-    config: (config, { command, mode }) => {
+    config: (config, { command, mode, isSsrBuild }) => {
       userConfig = config;
       const env = loadEnv(mode, userConfig.envDir || process.cwd(), '');
       const assetUrl = env.ASSET_URL ?? '';
       const ssr = !!userConfig.build?.ssr;
 
-      // ensureCommandShouldRunInEnvironment(command, serverConfig);
+      ensureCommandShouldRunInEnvironment(command, env);
 
       return {
         base: userConfig.base ?? (command === 'build' ? resolveBase(pluginConfig, assetUrl) : ''),
         publicDir: userConfig.publicDir ?? false,
         build: {
-          manifest: userConfig.build?.manifest ?? !ssr,
+          manifest: userConfig.build?.manifest ?? (ssr ? false : 'manifest.json'),
+          ssrManifest: userConfig.build?.ssrManifest ?? (ssr ? 'ssr-manifest.json' : false),
           outDir: userConfig.build?.outDir ?? ssr ? pluginConfig.ssrOutputDirectory : pluginConfig.buildDirectory,
           rollupOptions: {
             input: userConfig.build?.rollupOptions?.input ?? ssr ? pluginConfig.ssr : pluginConfig.input,
@@ -120,8 +134,8 @@ function resolveCubexPlugin(pluginConfig: Required<PluginConfig>): CubexPlugin {
           origin: userConfig.server?.origin ?? 'https://__cubex_vite_placehilder__.test',
           cors: userConfig.server?.cors ?? {
             origin: userConfig.server?.origin ?? [
-              /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1])(?::\d+)?$/,
-              ...(env.APP_URL ? [env.APP_URL] : []),   // *               (APP_URL="http://my-app.tld")
+              /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/, // Copied from Vite itself. We can import this once we drop 5.0 support and require Vite 6.1+. Source: https://github.com/vitejs/vite/blob/0c854645bd17960abbe8f01b602d1a1da1a2b9fd/packages/vite/src/node/constants.ts#L200-L201
+              ...(env.APP_URL ? [env.APP_URL] : []),              // *              (APP_URL="http://my-app.tld")
               /^https?:\/\/.*\.local-host\.xyz(:\d+)?$/,          // cubex-local    (SCHEME://*.local-host.xyz:PORT)
             ]
           }
@@ -141,6 +155,13 @@ function resolveCubexPlugin(pluginConfig: Required<PluginConfig>): CubexPlugin {
     },
     configResolved(config) {
       resolvedConfig = config
+    },
+    transform(code) {
+      if (resolvedConfig.command === 'serve') {
+        code = code.replace(/http:\/\/__cubex_vite_placehilder__\.test/g, viteDevServerUrl)
+
+        return pluginConfig.transformOnServe(code, viteDevServerUrl)
+      }
     },
     configureServer(server) {
       const appUrl = getAppUrl(resolvedConfig, pluginConfig)
@@ -191,6 +212,24 @@ function resolveCubexPlugin(pluginConfig: Required<PluginConfig>): CubexPlugin {
 }
 
 /**
+ * Validate the command can run in the given environment.
+ */
+function ensureCommandShouldRunInEnvironment(
+  command: "build" | "serve",
+  env: Record<string, string>
+): void {
+  if (command === "build" || env.CUBEX_BYPASS_ENV_CHECK === "1") {
+    return;
+  }
+
+  if (typeof env.CI !== "undefined") {
+    throw Error(
+      "You should not run the Vite HMR server in CI environments. You should build your assets for production instead. To disable this ENV check you may set CUBEX_BYPASS_ENV_CHECK=1"
+    );
+  }
+}
+
+/**
  * Convert the users configuration into a standard structure with defaults
  */
 function resolvePluginConfig(config: string | string[] | PluginConfig): Required<PluginConfig> {
@@ -236,9 +275,10 @@ function resolvePluginConfig(config: string | string[] | PluginConfig): Required
     publicDirectory: config.publicDirectory ?? 'public',
     buildDirectory: config.buildDirectory ?? 'resources',
     ssr: config.ssr ?? config.input,
-    ssrOutputDirectory: config.ssrOutputDirectory ?? 'bootstrap/ssr',
+    ssrOutputDirectory: config.ssrOutputDirectory ?? 'resources/ssr',
     hotFile: config.hotFile ?? '.dev',
-    refresh: config.refresh ?? true // default to true
+    refresh: config.refresh ?? true,
+    transformOnServe: config.transformOnServe ?? ((code) => code),
   }
 }
 
@@ -270,7 +310,6 @@ function resolveFullReloadConfig({ refresh: config }: Required<PluginConfig>): P
     return plugin;
   })
 }
-
 
 /**
  * Resolve the Vite base option from the plugin configuration

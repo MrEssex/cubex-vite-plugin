@@ -7,6 +7,7 @@ interface PluginConfig {
     input: string | string[];
     /**
      * Cubex Public Directory
+     *
      * @default 'public'
      */
     publicDirectory?: string;
@@ -27,7 +28,7 @@ interface PluginConfig {
     /**
      * The directory to output the SSR files to
      *
-     * @default 'bootstrap/ssr'
+     * @default 'resources/ssr'
      */
     ssrOutputDirectory?: string;
     /**
@@ -36,6 +37,10 @@ interface PluginConfig {
      * @default false
      */
     refresh?: boolean | string | string[] | RefreshConfig | RefreshConfig[];
+    /**
+     * Transform the code while serving.
+     */
+    transformOnServe?: (code: string, url: DevServerUrl) => string;
 }
 interface RefreshConfig {
     paths: string[];
@@ -44,9 +49,11 @@ interface RefreshConfig {
 interface CubexPlugin extends Plugin {
     config: (config: UserConfig, env: ConfigEnv) => UserConfig;
 }
+type DevServerUrl = `${'http' | 'https'}://${string}:${number}`;
 export declare const refreshPaths: string[];
 /**
  * Cubex Plugin for Vite.
+ *
  * @param config - A config object or relative path(s) of the scripts to be compiled.
  */
 export default function cubex(config: string | string[] | PluginConfig): [CubexPlugin, ...Plugin[]];

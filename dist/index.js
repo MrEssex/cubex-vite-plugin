@@ -1,16 +1,21 @@
-import fs from "fs";
+import fs, { mkdirSync } from "fs";
 import path from "path";
 import colors from "picocolors";
 import { loadEnv } from "vite";
 import fullReload from "vite-plugin-full-reload";
 import { fileURLToPath } from "url";
+import { existsSync } from "node:fs";
 let exitHandlersBound = false;
 const refreshPaths = [
   "src/**/*",
-  "assets/**/*"
+  "assets/**/*",
+  "translations/**/*"
 ].filter((path2) => fs.existsSync(path2.replace(/\*\*$/, "")));
 function cubex(config) {
   const pluginConfig = resolvePluginConfig(config);
+  if (!existsSync(pluginConfig.buildDirectory)) {
+    mkdirSync(pluginConfig.buildDirectory, { recursive: true });
+  }
   return [
     resolveCubexPlugin(pluginConfig),
     ...resolveFullReloadConfig(pluginConfig)
@@ -21,21 +26,23 @@ function resolveCubexPlugin(pluginConfig) {
   let resolvedConfig;
   let userConfig;
   const defaultAliases = {
-    "@": "assets/ts"
+    "@": "assets/js"
   };
   return {
     name: "cubex",
     enforce: "post",
-    config: (config, { command, mode }) => {
+    config: (config, { command, mode, isSsrBuild }) => {
       userConfig = config;
       const env = loadEnv(mode, userConfig.envDir || process.cwd(), "");
       const assetUrl = env.ASSET_URL ?? "";
       const ssr = !!userConfig.build?.ssr;
+      ensureCommandShouldRunInEnvironment(command, env);
       return {
         base: userConfig.base ?? (command === "build" ? resolveBase(pluginConfig, assetUrl) : ""),
         publicDir: userConfig.publicDir ?? false,
         build: {
-          manifest: userConfig.build?.manifest ?? !ssr,
+          manifest: userConfig.build?.manifest ?? (ssr ? false : "manifest.json"),
+          ssrManifest: userConfig.build?.ssrManifest ?? (ssr ? "ssr-manifest.json" : false),
           outDir: userConfig.build?.outDir ?? ssr ? pluginConfig.ssrOutputDirectory : pluginConfig.buildDirectory,
           rollupOptions: {
             input: userConfig.build?.rollupOptions?.input ?? ssr ? pluginConfig.ssr : pluginConfig.input
@@ -46,7 +53,7 @@ function resolveCubexPlugin(pluginConfig) {
           origin: userConfig.server?.origin ?? "https://__cubex_vite_placehilder__.test",
           cors: userConfig.server?.cors ?? {
             origin: userConfig.server?.origin ?? [
-              /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1])(?::\d+)?$/,
+              /^https?:\/\/(?:(?:[^:]+\.)?localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/,
               ...env.APP_URL ? [env.APP_URL] : [],
               /^https?:\/\/.*\.local-host\.xyz(:\d+)?$/
             ]
@@ -65,6 +72,12 @@ function resolveCubexPlugin(pluginConfig) {
     },
     configResolved(config) {
       resolvedConfig = config;
+    },
+    transform(code) {
+      if (resolvedConfig.command === "serve") {
+        code = code.replace(/http:\/\/__cubex_vite_placehilder__\.test/g, viteDevServerUrl);
+        return pluginConfig.transformOnServe(code, viteDevServerUrl);
+      }
     },
     configureServer(server) {
       const appUrl = getAppUrl(resolvedConfig, pluginConfig);
@@ -106,6 +119,16 @@ function resolveCubexPlugin(pluginConfig) {
     }
   };
 }
+function ensureCommandShouldRunInEnvironment(command, env) {
+  if (command === "build" || env.CUBEX_BYPASS_ENV_CHECK === "1") {
+    return;
+  }
+  if (typeof env.CI !== "undefined") {
+    throw Error(
+      "You should not run the Vite HMR server in CI environments. You should build your assets for production instead. To disable this ENV check you may set CUBEX_BYPASS_ENV_CHECK=1"
+    );
+  }
+}
 function resolvePluginConfig(config) {
   if (typeof config === "undefined") {
     throw new Error("cubex-vite-plugin: missing configuration");
@@ -139,9 +162,10 @@ function resolvePluginConfig(config) {
     publicDirectory: config.publicDirectory ?? "public",
     buildDirectory: config.buildDirectory ?? "resources",
     ssr: config.ssr ?? config.input,
-    ssrOutputDirectory: config.ssrOutputDirectory ?? "bootstrap/ssr",
+    ssrOutputDirectory: config.ssrOutputDirectory ?? "resources/ssr",
     hotFile: config.hotFile ?? ".dev",
-    refresh: config.refresh ?? true
+    refresh: config.refresh ?? true,
+    transformOnServe: config.transformOnServe ?? ((code) => code)
   };
 }
 function resolveFullReloadConfig({ refresh: config }) {
